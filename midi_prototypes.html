@@ -1,0 +1,172 @@
+from pathlib import Path
+
+# HTML content with original dark layout + current time + more upcoming trains
+html_content = """<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MIDI Prototypes - Overzicht, Perron, Wagonindeling</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#06b6d4;--glass: rgba(255,255,255,0.03)}
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, Arial, sans-serif;background:linear-gradient(180deg,#071029 0%,#03121b 100%);color:#e6eef6;margin:0;min-height:100vh}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.03);backdrop-filter:blur(6px)}
+    h1{font-size:18px;margin:0}
+    nav{display:flex;gap:8px;align-items:center}
+    #clock{font-weight:600;color:var(--accent);margin-left:16px;font-size:14px}
+    button.btn{background:var(--card);border:1px solid rgba(255,255,255,0.03);color:var(--muted);padding:8px 12px;border-radius:10px;cursor:pointer}
+    button.btn.active{background:linear-gradient(90deg,var(--accent),#7dd3fc);color:#042028;font-weight:600}
+    main{padding:24px}
+    .screen{display:none;animation:fade .18s ease both}
+    .screen.active{display:block}
+    @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+    .card{background:var(--card);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .kpi{font-size:32px;font-weight:700}
+    .muted{color:var(--muted);font-size:13px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px;border-bottom:1px dashed rgba(255,255,255,0.03);text-align:left}
+    .status{padding:6px 10px;border-radius:999px;font-weight:600;font-size:13px}
+    .status.on-time{background:rgba(34,197,94,0.12);color:#bbf7d0}
+    .status.delay{background:rgba(245,158,11,0.08);color:#ffd29a}
+    .wagon{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;max-width:960px}
+    .seat{background:var(--glass);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);text-align:center}
+    .seat.selected{outline:3px solid rgba(6,182,212,0.14);background:linear-gradient(180deg,rgba(6,182,212,0.06),transparent)}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    footer{padding:18px 24px;border-top:1px solid rgba(255,255,255,0.03);color:var(--muted);font-size:13px;text-align:center}
+    #footer-time{color:var(--accent);font-weight:500;margin-top:6px}
+    @media (max-width:600px){.wagon{grid-template-columns:repeat(3,1fr)}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MIDI - Prototypes</h1>
+    <nav>
+      <button class="btn active" data-target="overzicht">Overzicht</button>
+      <button class="btn" data-target="perron">Perron</button>
+      <button class="btn" data-target="wagon">Wagonindeling</button>
+      <div id="clock"></div>
+    </nav>
+  </header>
+  <main>
+    <section id="overzicht" class="screen active">
+      <h2>Overzicht</h2>
+      <p class="muted">Snel overzicht van status, aankomsten en capaciteit.</p>
+      <div class="grid" style="margin-top:12px">
+        <div class="card"><div class="muted">Actieve treinen</div><div class="kpi">14</div></div>
+        <div class="card"><div class="muted">Treinen vertraging</div><div class="kpi">3</div></div>
+        <div class="card"><div class="muted">Beschikbare wagons</div><div class="kpi">36</div></div>
+        <div class="card"><div class="muted">Gem. bezetting</div><div class="kpi">72%</div></div>
+      </div>
+      <section style="margin-top:18px">
+        <h3>Aankomende ritten</h3>
+        <div class="card">
+          <table>
+            <thead>
+              <tr><th>Trein</th><th>Bestemming</th><th>Vertrek</th><th>Spoor</th><th>Status</th></tr>
+            </thead>
+            <tbody id="trips-list">
+              <tr><td>IC 123</td><td>Antwerpen</td><td>12:30</td><td>5A</td><td><span class="status on-time">Op tijd</span></td></tr>
+              <tr><td>R 455</td><td>Brussel</td><td>12:45</td><td>2</td><td><span class="status delay">+12 min</span></td></tr>
+              <tr><td>IC 77</td><td>Gent</td><td>13:00</td><td>4</td><td><span class="status on-time">Op tijd</span></td></tr>
+              <tr><td>S 212</td><td>Leuven</td><td>13:15</td><td>1</td><td><span class="status on-time">Op tijd</span></td></tr>
+              <tr><td>R 502</td><td>Brugge</td><td>13:30</td><td>3B</td><td><span class="status delay">+5 min</span></td></tr>
+              <tr><td>IC 330</td><td>Kortrijk</td><td>13:45</td><td>6</td><td><span class="status on-time">Op tijd</span></td></tr>
+              <tr><td>P 804</td><td>Charleroi</td><td>14:00</td><td>7</td><td><span class="status on-time">Op tijd</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="perron" class="screen">
+      <h2>Perrons</h2>
+      <p class="muted">Overzicht van perrons met actuele informatie.</p>
+      <div class="card" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Spoor</th><th>Trein</th><th>Bestemming</th><th>Vertrek</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>IC 200</td><td>Luik</td><td>12:50</td><td><span class="status on-time">Op tijd</span></td></tr>
+            <tr><td>2</td><td>R 455</td><td>Brussel</td><td>12:57</td><td><span class="status delay">+8 min</span></td></tr>
+            <tr><td>5A</td><td>IC 123</td><td>Antwerpen</td><td>13:10</td><td><span class="status on-time">Op tijd</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="wagon" class="screen">
+      <h2>Wagonindeling</h2>
+      <p class="muted">Selecteer stoelen of bekijk capaciteit per wagon.</p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">
+        <div style="flex:1;min-width:320px" class="card">
+          <h4>Wagon A - 1e klas</h4>
+          <div class="wagon" id="wagon-grid"></div>
+          <div class="controls">
+            <button class="btn" id="clear-selection">Wis selectie</button>
+            <div style="margin-left:auto" class="muted" id="selected-count">Geselecteerd: 0</div>
+          </div>
+        </div>
+        <div style="width:320px;min-width:220px" class="card">
+          <h4>Wagon details</h4>
+          <p class="muted">Type: 1e klas — Stoelen: 24 — Beschikbaar: 18</p>
+          <hr style="border:none;height:1px;background:rgba(255,255,255,0.03);margin:12px 0">
+          <div><strong>Geselecteerde stoelen</strong><ul id="selected-list" style="margin:8px 0 0 16px"></ul></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    MIDI prototypes — gegenereerd HTML prototype
+    <div id="footer-time"></div>
+  </footer>
+
+  <script>
+    function updateClock(){
+      const now=new Date();
+      const timeStr=now.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      document.getElementById('clock').textContent=timeStr;
+      document.getElementById('footer-time').textContent='Laatste update: '+timeStr;
+    }
+    setInterval(updateClock,1000);
+    updateClock();
+
+    document.querySelectorAll('button[data-target]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.querySelectorAll('button[data-target]').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+        document.getElementById(btn.dataset.target).classList.add('active');
+      });
+    });
+
+    const wagonGrid=document.getElementById('wagon-grid');
+    const selected=new Set();
+    for(let i=1;i<=24;i++){
+      const div=document.createElement('div');
+      div.className='seat'; div.textContent='Stoel '+i; div.dataset.seat=i;
+      if(Math.random()<0.25){div.style.opacity=0.45;div.dataset.occupied='1';div.textContent='Bezet '+i;div.style.cursor='not-allowed'}
+      wagonGrid.appendChild(div);
+    }
+    function updateSelectedUI(){
+      document.getElementById('selected-count').textContent='Geselecteerd: '+selected.size;
+      const list=document.getElementById('selected-list'); list.innerHTML='';
+      Array.from(selected).sort((a,b)=>a-b).forEach(s=>{const li=document.createElement('li'); li.textContent='Stoel '+s; list.appendChild(li);});
+    }
+    wagonGrid.addEventListener('click',e=>{
+      const seat=e.target.closest('.seat'); if(!seat||seat.dataset.occupied)return;
+      const id=seat.dataset.seat;
+      if(selected.has(id)){selected.delete(id);seat.classList.remove('selected');} else {selected.add(id);seat.classList.add('selected');}
+      updateSelectedUI();
+    });
+    document.getElementById('clear-selection').addEventListener('click',()=>{selected.clear();document.querySelectorAll('.seat.selected').forEach(s=>s.classList.remove('selected'));updateSelectedUI();});
+  </script>
+</body>
+</html>"""
+
+# Write HTML file
+output_path = Path("/mnt/data/midi_prototypes.html")
+output_path.write_text(html_content, encoding="utf-8")
+
+output_path

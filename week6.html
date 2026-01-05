@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Week 6</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeInUp 600ms ease-out both;
+    }
+    .vignette {
+      background: radial-gradient(circle, rgba(0,0,0,.15), rgba(0,0,0,.75));
+    }
+  </style>
+</head>
+
+<body
+  data-week="6"
+  data-total="12"
+  class="relative min-h-screen text-white font-sans overflow-x-hidden"
+>
+
+<!-- BACKGROUND -->
+<div class="fixed inset-0 -z-20 bg-cover bg-center opacity-35"
+     style="background-image:url('station-bg.jpg')"></div>
+<div class="fixed inset-0 -z-10 backdrop-blur-[2px]"></div>
+<div class="fixed inset-0 -z-10 vignette"></div>
+
+<!-- TOPBAR -->
+<header class="relative z-40 animate-fade-in flex items-center justify-between px-6 py-5">
+
+  <!-- LEFT -->
+  <div class="flex items-center gap-4">
+    <!-- HOME -->
+    <a href="index1.html"
+       class="text-3xl transition hover:scale-110"
+       title="Terug naar overzicht">🏠</a>
+
+    <!-- PREV -->
+    <a id="prevLink"
+       class="text-4xl transition hover:scale-110 hover:-rotate-6"
+       title="Vorige week">⬅️</a>
+  </div>
+
+  <!-- TITLE + WEEK DROPDOWN -->
+  <div class="relative z-50 text-center">
+    <h1 id="weekTitle" class="text-3xl font-bold drop-shadow">Week</h1>
+
+    <button
+      id="weekButton"
+      class="mt-1 inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-sm hover:bg-white/30 transition"
+    >
+      <span id="weekBadge"></span> ⌄
+    </button>
+
+    <!-- DROPDOWN -->
+    <div
+      id="weekMenu"
+      class="absolute left-1/2 z-[9999] mt-3 hidden w-44 -translate-x-1/2
+             rounded-xl bg-white/95 text-black shadow-2xl ring-1 ring-black/10"
+    ></div>
+  </div>
+
+  <!-- NEXT -->
+  <a id="nextLink"
+     class="text-4xl transition hover:scale-110 hover:rotate-6"
+     title="Volgende week">➡️</a>
+</header>
+
+<!-- CONTENT -->
+<main class="px-6 pb-12">
+
+  <!-- TITLE BLOCK -->
+  <section
+    class="animate-fade-in mx-auto mb-10 w-fit rounded-2xl bg-white/80 text-black px-10 py-7 shadow-xl text-center"
+  >
+    <h2 id="weekH1" class="text-4xl font-bold"></h2>
+    <p class="mt-2 text-xl">Weekdocumentatie</p>
+  </section>
+
+  <!-- TEXT -->
+  <section
+    class="animate-fade-in mx-auto max-w-4xl rounded-2xl bg-white/80 text-black px-10 py-7 shadow-xl"
+  >
+    <p>
+     
+        Deze week hadden we de kans om onze documentatie van alle 6 weken te zetten in een HTML-document met verschillende pagina’s. Ook moesten we de typografie en kleuren aanpassen. Het was fijn om een eigen ontwerp te kunnen maken en zelf creatief te kunnen zijn. Er waren ook veel kansen om Visual Studio Code heel goed te leren kennen en zelf code te maken.
+    </p>
+  </section>
+
+
+
+</main>
+
+<!-- FOOTER -->
+<footer class="relative z-30 mt-16 border-t border-white/20 bg-black/30 backdrop-blur">
+  <div class="mx-auto max-w-5xl px-6 py-6 text-center text-sm text-white/80 space-y-2">
+
+    <!-- Naam + groep -->
+    <p>
+      <strong>Huysmans Yindra</strong> — Groep 1GDM2</strong>
+    </p>
+
+    <!-- GitHub -->
+    <p>
+      Laatste versie van de code:
+      <a
+        href="https://github.com/yindrah/Lost-in-Tra-i-nslation"
+        target="_blank"
+        class="underline hover:text-white transition"
+      >
+        GitHub Repository
+      </a>
+    </p>
+
+  </div>
+</footer>
+
+<!-- LIGHTBOX -->
+<div id="lightbox"
+     class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/85 backdrop-blur-sm"
+     onclick="closeLightbox()">
+
+  <button class="absolute top-6 right-6 text-white text-3xl hover:scale-110 transition">✕</button>
+<!-- Prev -->
+  <button
+    class="absolute left-6 text-white text-4xl hover:scale-110 transition"
+    onclick="event.stopPropagation(); prevImg();"
+  >‹</button>
+
+  <!-- Next -->
+  <button
+    class="absolute right-6 text-white text-4xl hover:scale-110 transition"
+    onclick="event.stopPropagation(); nextImg();"
+  >›</button>
+
+  <div class="relative max-h-[90vh] max-w-[90vw] flex items-center justify-center"
+       onclick="event.stopPropagation()">
+    <img
+      id="lightboxImg"
+      class="max-h-[90vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"
+    />
+  </div>
+</div>
+
+<!-- SCRIPT -->
+<script>
+  const body = document.body;
+  const week = Number(body.dataset.week);
+  const total = Number(body.dataset.total);
+
+  weekTitle.textContent = `Week ${week}`;
+  weekH1.textContent = `Week ${week}`;
+  weekBadge.textContent = `Week ${week}/${total}`;
+  document.title = `Week ${week}`;
+
+  if (week > 1) prevLink.href = `week${week - 1}.html`;
+  else prevLink.classList.add("opacity-40","pointer-events-none");
+
+  if (week < total) nextLink.href = `week${week + 1}.html`;
+  else nextLink.classList.add("opacity-40","pointer-events-none");
+
+  weekMenu.innerHTML = Array.from({ length: total }, (_, i) => `
+    <a href="week${i+1}.html"
+       class="block px-4 py-2 text-sm hover:bg-black/10 ${i+1===week?'font-bold bg-black/5':''}">
+      Week ${i+1}
+    </a>`
+  ).join("");
+
+  weekButton.addEventListener("click", e => {
+    e.stopPropagation();
+    weekMenu.classList.toggle("hidden");
+  });
+  document.addEventListener("click", () => weekMenu.classList.add("hidden"));
+
+  const images = ["overzichtscherm - frame 1.pdf","perronscherm - frame 2.pdf","wagonindelingscherm - frame 3.pdf"];
+  let current = 0;
+
+  function openLightbox(i){
+    current=i;
+    lightbox.classList.remove("hidden");
+    lightbox.classList.add("flex");
+    lightboxImg.src=images[current];
+    document.body.classList.add("overflow-hidden");
+  }
+  function closeLightbox(){
+    lightbox.classList.add("hidden");
+    lightbox.classList.remove("flex");
+    document.body.classList.remove("overflow-hidden");
+  }
+  function prevImg(){ if(current>0){current--; lightboxImg.src=images[current];}}
+  function nextImg(){ if(current<images.length-1){current++; lightboxImg.src=images[current];}}
+</script>
+
+</body>
+</html>
